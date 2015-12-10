@@ -1,0 +1,94 @@
+<?php
+
+function civicrmogp_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Contribute_Form_Contribution_Main') {
+    // adds: <meta property="og:title" content="[...]" />
+    $element = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'property' => 'og:title',
+        'content' => $form->_values['title'],
+      ),
+    );
+    drupal_add_html_head($element, 'ogp_title');
+
+    // adds: <meta property="og:description" content="[...]" />
+    $element = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'property' => 'og:description',
+        'content' => $form->_values['intro_text'],
+      ),
+    );
+    drupal_add_html_head($element, 'ogp_description');
+  }
+}
+
+function civicrmogp_civicrm_pageRun(&$page) {
+  if (get_class($page) == 'CRM_Contribute_Page_PCPInfo') {
+    $id = $page->get('id');
+
+    $dao = new CRM_Contribute_DAO_PCP();
+    $dao->id = $id;
+
+    if ($dao->find(true)) {
+      // adds: <meta property="og:title" content="[...]" />
+      $element = array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'property' => 'og:title',
+          'content' => $dao->title,
+        ),
+      );
+      drupal_add_html_head($element, 'ogp_title');
+
+      // adds: <meta property="og:description" content="[...]" />
+      $element = array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'property' => 'og:description',
+          'content' => $dao->intro_text,
+        ),
+      );
+      drupal_add_html_head($element, 'ogp_description');
+
+      // Add the default site logo, as an alternative choice
+      // Oddly, needs to be before the real PCP image, otherwise it shows before
+	// removing for now, since not really needed (in my use case)
+      if ($image = theme_get_setting('logo')) {
+         // adds: <meta property="og:image" content="http://[...]" />
+         $element = array(
+           '#tag' => 'meta',
+           '#attributes' => array(
+             'property' => 'og:image',
+             'content' => $image,
+           ),
+         );
+         drupal_add_html_head($element, 'ogp_image_default');
+      }
+
+
+      // Add the image
+/* DOES NOT WORK: url encodes the file parameters, and facebook does not parse them correctly */
+/*
+      if ($file_id = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_EntityFile', $id , 'file_id', 'entity_id') ) {
+        // Using UF function adds language prefix and htmlencodes parameters.. breaks Facebook
+        $image = CRM_Utils_System::url('civicrm/file', "reset=1&id=$file_id&eid={$id}", TRUE, NULL, FALSE);
+
+        // adds: <meta property="og:image" content="http://[...]" />
+        $element = array(
+          '#tag' => 'meta',
+          '#attributes' => array(
+            'property' => 'og:image',
+            'content' => $image,
+          ),
+        );
+        drupal_add_html_head($element, 'ogp_image');
+      }
+*/
+
+    }
+  }
+}
+
+
